@@ -13,7 +13,7 @@ def main():
 			loginDict = json.load(profile)
 		crawl(loginDict)
 	except ValueError:
-		print "Your .crawl_profiile seems to be corrupted."
+		print "Your .crawl_profile seems to be corrupted."
 		print "Try deleting it and running the program again."
 		print
 	except IOError:
@@ -132,7 +132,7 @@ def getUserInfo():
 	print "Profile verified successfully."
 	print "Install into crontab with: "
 	print
-	print "(crontab -l ; echo '0,30 * * * * python {}/crawl.py') | crontab -".format(pwd)
+	print "$ (crontab -l ; echo '0,30 * * * * python {}/crawl.py') 2>/dev/null | sort | uniq | crontab -".format(pwd)
 	print
 
 	return profile
