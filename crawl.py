@@ -75,10 +75,20 @@ def crawl(loginDict):
 
 	return
 
-def getClassList(session):
+def getClassList(session, iter=0):
 	response = session.post("https://blackboard.mines.edu/webapps/streamViewer/streamViewer?cmd=loadStream&streamName=mygrades")
 	parsed_json = json.loads(response.text)
-	return parsed_json['sv_extras']['sx_filters'][0]['choices']
+	try:
+		classList = parsed_json['sv_extras']['sx_filters'][0]['choices']
+	except IndexError:
+		#print "Here's what the json we got: {}".format(parsed_json)
+		#print
+		#print "Here's the cookie jar: {}".format(session.cookies)
+		if iter > 9:
+			print "Getting class list failed."	
+			return []
+		classList = getClassList(session, iter + 1)
+	return classList
 
 def alarm(myClass, assignment, date, score, max, login):
 	print "Sending Alarm: {} graded {} on {}. You scored {} out of a possible {}.".format(myClass, assignment, date, score, max)
