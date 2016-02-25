@@ -122,7 +122,7 @@ def getUserInfo():
 		print
 
 	profile['To'] = raw_input("Mobile number: ") + '@'
-	profile['To'] += raw_input("Notification Destination (vtext.com, att.net, tmomail.net): ")
+	profile['To'] += raw_input("Notification Destination (vtext.com, txt.att.net, tmomail.net): ")
 	profile['From'] = raw_input("Return Address (enter a valid email address): ")
 
 	while True:
