@@ -7,6 +7,9 @@ import os
 import sys
 from email.mime.text import MIMEText
 
+EUSER = 'minesblackboardcrawler@gmail.com'
+EPASS = 'QmxhY2tiMGFyZA==\n' #Base64
+
 def main():
 	try:
 		with open(pwd + '/.crawl_profile', 'r+') as profile:
@@ -125,18 +128,32 @@ def getUserInfo():
 	profile['To'] += raw_input("Notification Destination (vtext.com, txt.att.net, tmomail.net): ")
 	profile['From'] = raw_input("Return Address (enter a valid email address): ")
 
-	while True:
-		profile['Server'] = raw_input("SMTP Server (smtp.comcast.net, [other?]): ")
-		profile['Port'] = raw_input("SMTP Server Port (25, 587): ")
-		profile['eUser'] = raw_input("SMTP Server Username: ")
-		profile['ePass'] = getpass.getpass("SMTP Server Password: ").encode('base64')
-		if testSMTP(profile):
-			break;
-		print
-		print "SMTP server login failed. Please try again."
-		print
+	smtpConfigOption = raw_input("SMTP Configuration (Default=1, Custom=2): ")
+	try:
+		smtpConfigOption = int(smtpConfigOption)
+	except ValueError:
+		smtpConfigOption = 1
 
-	#profile['Interval'] = raw_input("Update interval (10-60 min): ")
+	if smtpConfigOption == 2:
+		while True:
+			profile['Server'] = raw_input("SMTP Server (smtp.comcast.net, [other?]): ")
+			profile['Port'] = raw_input("SMTP Server Port (25, 587): ")
+			profile['eUser'] = raw_input("SMTP Server Username: ")
+			profile['ePass'] = getpass.getpass("SMTP Server Password: ").encode('base64')
+			if testSMTP(profile):
+				break;
+			print
+			print "SMTP server login failed. Please try again."
+			print
+
+	else:
+		profile['Server'] = 'smtp.gmail.com'
+		profile['Port'] = '587'
+		profile['eUser'] = EUSER
+		profile['ePass'] = EPASS
+
+		if not testSMTP(profile):
+			print "SMTP server login failed. crawl.py will not function properly until this is resolved."
 
 	print
 	print "Profile verified successfully."
