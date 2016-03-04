@@ -16,13 +16,13 @@ def main():
 			loginDict = json.load(profile)
 		crawl(loginDict)
 	except ValueError:
-		print "Your .crawl_profile seems to be corrupted."
-		print "Try deleting it and running the program again."
-		print
+		print >> sys.stderr, "Your .crawl_profile seems to be corrupted."
+		print >> sys.stderr, "Try deleting it and running the program again."
+		print >> sys.stderr,
 	except IOError:
-	        print "Warning: '.crawl_profile' not found."
-        	print "This looks like the first time you've run this tool."
-	        print "Let's create your persistent profile."
+	        print >> sys.stderr, "Warning: '.crawl_profile' not found."
+        	print >> sys.stderr, "This looks like the first time you've run this tool."
+	        print >> sys.stderr, "Let's create your persistent profile."
         	print
 
 		login = getUserInfo();
@@ -84,11 +84,11 @@ def getClassList(session, iter=0):
 	try:
 		classList = parsed_json['sv_extras']['sx_filters'][0]['choices']
 	except IndexError:
-		#print "Here's what the json we got: {}".format(parsed_json)
-		#print
-		#print "Here's the cookie jar: {}".format(session.cookies)
+		#print >> sys.stderr, "Here's what the json we got: {}".format(parsed_json)
+		#print >> sys.stderr,
+		#print >> sys.stderr, "Here's the cookie jar: {}".format(session.cookies)
 		if iter > 9:
-			print "Getting class list failed."	
+			print >> sys.stderr, "Getting class list failed."	
 			return []
 		classList = getClassList(session, iter + 1)
 	return classList
@@ -108,8 +108,8 @@ def alarm(myClass, assignment, date, score, max, login):
 		smtpclient.sendmail([msg['From']], [msg['To']], msg.as_string())
 		smtpclient.quit()
 	except SMTPException:
-		print "SMTP Exception: Either the SMTP server is down or cannot be reached."
-		print "Please try again later."
+		print >> sys.stderr, "SMTP Exception: Either the SMTP server is down or cannot be reached."
+		print >> sys.stderr, "Please try again later."
 	return
 
 def getUserInfo():
@@ -159,7 +159,7 @@ def getUserInfo():
 	print "Profile verified successfully."
 	print "Install into crontab with: "
 	print
-	print "$ (crontab -l ; echo '0,30 * * * * python {}/crawl.py') 2>/dev/null | sort | uniq | crontab -".format(pwd)
+	print "$ (crontab -l ; echo '0,30 * * * * python {}/crawl.py') 1>/dev/null | sort | uniq | crontab -".format(pwd)
 	print
 
 	return profile
