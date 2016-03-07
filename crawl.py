@@ -18,7 +18,7 @@ def main():
 	except ValueError:
 		print >> sys.stderr, "Your .crawl_profile seems to be corrupted."
 		print >> sys.stderr, "Try deleting it and running the program again."
-		print >> sys.stderr,
+		print >> sys.stderr
 	except IOError:
 	        print >> sys.stderr, "Warning: '.crawl_profile' not found."
         	print >> sys.stderr, "This looks like the first time you've run this tool."
@@ -85,7 +85,7 @@ def getClassList(session, iter=0):
 		classList = parsed_json['sv_extras']['sx_filters'][0]['choices']
 	except IndexError:
 		#print >> sys.stderr, "Here's what the json we got: {}".format(parsed_json)
-		#print >> sys.stderr,
+		#print >> sys.stderr
 		#print >> sys.stderr, "Here's the cookie jar: {}".format(session.cookies)
 		if iter > 9:
 			print >> sys.stderr, "Getting class list failed."	
@@ -159,7 +159,7 @@ def getUserInfo():
 	print "Profile verified successfully."
 	print "Install into crontab with: "
 	print
-	print "$ (crontab -l ; echo '0,30 * * * * python {}/crawl.py') 1>/dev/null | sort | uniq | crontab -".format(pwd)
+	print "$ (crontab -l ; echo '0,30 * * * * python {}/crawl.py 1>/dev/null') | sort | uniq | crontab -".format(pwd)
 	print
 
 	return profile
