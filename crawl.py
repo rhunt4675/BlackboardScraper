@@ -5,15 +5,20 @@ import smtplib
 import getpass
 import os
 import sys
+import re
 from email.mime.text import MIMEText
 
+# Default GMAIL credentials
 EUSER = 'minesblackboardcrawler@gmail.com'
 EPASS = 'QmxhY2tiMGFyZA==\n' #Base64
 
 def main():
+	# Open persistent profile configuration file
 	try:
 		with open(pwd + '/.crawl_profile', 'r+') as profile:
 			loginDict = json.load(profile)
+
+		# Check for grades using provided credentials
 		crawl(loginDict)
 	except ValueError:
 		print >> sys.stderr, "Your .crawl_profile seems to be corrupted."
@@ -25,11 +30,13 @@ def main():
 	        print >> sys.stderr, "Let's create your persistent profile."
         	print
 
+		# Create profile if none exists
 		login = getUserInfo();
 		with open(pwd + '/.crawl_profile', 'w') as profile:
 			json.dump(login, profile)
 
 def crawl(loginDict):
+	# Load grade information which is not new and has already been sent to the user (from grades.json)
 	try:
 		with open(pwd + '/grades.json') as inFile:
 			inData = json.load(inFile)
@@ -39,13 +46,18 @@ def crawl(loginDict):
 		inData = {}
 		pass
 
+	# Create an HTTP session
 	r = requests.session()
 
+	# Login to Blackboard using loginDict credentials
 	r.get("https://blackboard.mines.edu/")
 	payload = {'user_id':loginDict['bUser'], 'password':loginDict['bPass'].decode('base64'), 'login':'Login', 'action':'login', 'new_loc':''}
 	r.post("https://blackboard.mines.edu/webapps/login/", data=payload)
 
+	# Get a list of student's classes
 	classList = getClassList(r)
+
+	# For each class, parse an XML tree (using XPATH) to grab the name, date, score, and max score for each assignment
 	for myClass in classList:
 		grades = r.get("https://blackboard.mines.edu/webapps/bb-mygrades-BBLEARN/myGrades?course_id="+myClass+"&stream_name=mygrades")
 		tree = html.fromstring(grades.content)
@@ -63,22 +75,28 @@ def crawl(loginDict):
 
 			tempJson = {"date":date, "score":score, "max":max}
 
+			# Add a class to grades.json if it hasn't already been added
 			if not myClass in inData:
 				inData[myClass] = {}
+
+			# Notify student about a new assignment that has been created
 			if not name in inData[myClass]:
 				inData[myClass][name] = tempJson
 				alarm(classList[myClass], name, date, score, max, loginDict)
+
+			# Notify student about an assignment where some aspect has changed (Date, Score, Max Score)
 			elif inData[myClass][name] != tempJson:
 				inData[myClass][name] = tempJson
 				alarm(classList[myClass], name, date, score, max, loginDict)
 
+	# Write out the updated JSON for persistence
 	with open(pwd + '/grades.json', 'w') as outFile:
 		json.dump(inData, outFile)
-	outFile.close()
 
 	return
 
 def getClassList(session, iter=0):
+	# Attempt to get a list of student's classes
 	response = session.post("https://blackboard.mines.edu/webapps/streamViewer/streamViewer?cmd=loadStream&streamName=mygrades")
 	parsed_json = json.loads(response.text)
 	try:
@@ -90,22 +108,37 @@ def getClassList(session, iter=0):
 		if iter > 9:
 			print >> sys.stderr, "Getting class list failed."	
 			return []
+
+		# Retry post request up to 10 times
 		classList = getClassList(session, iter + 1)
 	return classList
 
 def alarm(myClass, assignment, date, score, max, login):
-	print "Sending Alarm: {} graded {} on {}. You scored {} out of a possible {}.".format(myClass, assignment, date, score, max)
-	msg = MIMEText("{} -- {} on {}. You scored {} out of a possible {}.".format(myClass, assignment, date, score, max))
-	msg['To'] = login['To']
-	msg['From'] = login['From']
+	# Generate a customized SMS message and duplicate to STDOUT
+	print "Sending Alarm: {} -- {} on {}. You scored {} out of a possible {}.".format(myClass, assignment, date, score, max)
 
+	# Observe 160 char SMS message limit
+	msgs = re.findall("..{,155}", "{} -- {} on {}. You scored {} out of a possible {}.".format(myClass, assignment, date, score, max))
+	mimemsgs = []
+	for msg in msgs:
+		tempMimeMsg = MIMEText(msg)
+		tempMimeMsg['To'] = login['To']
+		tempMimeMsg['From'] = login['From']
+		mimemsgs.append(tempMimeMsg)
+		
+	# Attempt to login to provided SMTP server with provided credentials and send the message
 	try:
 		smtpclient = smtplib.SMTP(login['Server'], int(login['Port']))
 		smtpclient.ehlo()
 		smtpclient.starttls()
 		smtpclient.ehlo()
+
+		# Iterate through list of 160-char messages
 		smtpclient.login(login['eUser'], login['ePass'].decode('base64'))
-		smtpclient.sendmail([msg['From']], [msg['To']], msg.as_string())
+		for msg in mimemsgs:
+			smtpclient.sendmail([msg['From']], [msg['To']], msg.as_string())
+
+		# Close SMTP session
 		smtpclient.quit()
 	except SMTPException:
 		print >> sys.stderr, "SMTP Exception: Either the SMTP server is down or cannot be reached."
@@ -113,6 +146,7 @@ def alarm(myClass, assignment, date, score, max, login):
 	return
 
 def getUserInfo():
+	# Prompt user for Blackboard & SMTP credentials as well as a notification address, then help them install a crontab job
 	profile = {}
 	profile['bUser'] = raw_input("Blackboard Username: ")
 
@@ -165,6 +199,7 @@ def getUserInfo():
 	return profile
 
 def testSMTP(profile):
+	# Verify that the provided SMTP credentials actually "work" before accepting them
 	try:
 		smtpclient = smtplib.SMTP(profile['Server'], int(profile['Port']))
                 smtpclient.ehlo()
