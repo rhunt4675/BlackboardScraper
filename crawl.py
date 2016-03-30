@@ -86,6 +86,12 @@ def crawl(loginDict):
 
 			# Notify student about an assignment where some aspect has changed (Date, Score, Max Score)
 			elif inData[myClass][name] != tempJson:
+
+				# Debug for erroneous notifications
+				print >> sys.stderr, "An aspect of an assignment has changed in some way (this may be erroneous)."
+				print >> sys.stderr, "Here is the old JSON: {}".format(inData[myClass][name])
+				print >> sys.stderr, "Here is the new JSON: {}".format(tempJson)
+
 				inData[myClass][name] = tempJson
 				alarm(classList[myClass], name, date, score, max, loginDict)
 
@@ -102,9 +108,6 @@ def getClassList(session, iter=0):
 	try:
 		classList = parsed_json['sv_extras']['sx_filters'][0]['choices']
 	except IndexError:
-		#print >> sys.stderr, "Here's what the json we got: {}".format(parsed_json)
-		#print >> sys.stderr
-		#print >> sys.stderr, "Here's the cookie jar: {}".format(session.cookies)
 		if iter > 9:
 			print >> sys.stderr, "Getting class list failed."	
 			return []
