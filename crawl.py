@@ -218,4 +218,3 @@ if __name__ == '__main__':
 	global pwd
 	pwd = os.path.abspath(__file__).rsplit('/', 1)[0] 
 	main()
-
