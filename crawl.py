@@ -92,6 +92,8 @@ def crawl(loginDict):
 				print >> sys.stderr, "Here is the old JSON: {}".format(inData[myClass][name])
 				print >> sys.stderr, "Here is the new JSON: {}".format(tempJson)
 
+				print >> sys.stderr, "Here is the HTML tree: {}".format(grades.content)
+
 				inData[myClass][name] = tempJson
 				alarm(classList[myClass], name, date, score, max, loginDict)
 
