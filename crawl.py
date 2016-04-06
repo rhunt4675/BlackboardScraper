@@ -44,7 +44,6 @@ def crawl(loginDict):
 		inData = {}
 	except IOError:
 		inData = {}
-		pass
 
 	# Create an HTTP session
 	r = requests.session()
@@ -72,8 +71,9 @@ def crawl(loginDict):
 			score = (score and score[0]) or None
 			max = row.xpath('./div[3]/span[2]/text()')
 			max = (max and max[0].strip()[1:]) or None
+			strikes = inData[myClass][name]['strikes'] if (inData.get(myClass).get(name).get('strikes')) else 0
 
-			tempJson = {"date":date, "score":score, "max":max}
+			tempJson = {"date":date, "score":score, "max":max, "strikes":strikes}
 
 			# Add a class to grades.json if it hasn't already been added
 			if not myClass in inData:
@@ -87,15 +87,28 @@ def crawl(loginDict):
 			# Notify student about an assignment where some aspect has changed (Date, Score, Max Score)
 			elif inData[myClass][name] != tempJson:
 
-				# Debug for erroneous notifications
-				print >> sys.stderr, "An aspect of an assignment has changed in some way (this may be erroneous)."
-				print >> sys.stderr, "Here is the old JSON: {}".format(inData[myClass][name])
-				print >> sys.stderr, "Here is the new JSON: {}".format(tempJson)
+				# Increment the strikes counter
+				if not 'strikes' in inData[myClass][name]:
+					inData[myClass][name]['strikes'] = 0 #TODO: remove
+				else:
+					inData[myClass][name]['strikes'] += 1
 
-				print >> sys.stderr, "Here is the HTML tree: {}".format(grades.content)
+				# If this is the third consecutive time an aspect has changed, accept it as valid
+				if inData[myClass][name]['strikes'] > 2:
+					inData[myClass][name] = tempJson
+					inData[myClass][name]['strikes'] = 0
+					alarm(classList[myClass], name, date, score, max, loginDict)
 
-				inData[myClass][name] = tempJson
-				alarm(classList[myClass], name, date, score, max, loginDict)
+                                # Debug for erroneous notifications
+                                print >> sys.stderr, "An aspect of an assignment has changed in some way (this may be erroneous)."
+                                print >> sys.stderr, "Strike counter (consecutive): {}".format(inData[myClass][name]['strikes'])
+                                print >> sys.stderr, "Here is the old JSON: {}".format(inData[myClass][name])
+                                print >> sys.stderr, "Here is the new JSON: {}".format(tempJson)
+                                print >> sys.stderr, "Here is the HTML tree: {}".format(grades.content)
+
+			# Reset strike counter
+			else:
+				inData[myClass][name]['strikes'] = 0
 
 	# Write out the updated JSON for persistence
 	with open(pwd + '/grades.json', 'w') as outFile:
