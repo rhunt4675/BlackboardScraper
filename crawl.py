@@ -88,10 +88,8 @@ def crawl(loginDict):
 			elif inData[myClass][name] != tempJson:
 
 				# Increment the strikes counter
-				if not 'strikes' in inData[myClass][name]:
-					inData[myClass][name]['strikes'] = 0 #TODO: remove
-				else:
-					inData[myClass][name]['strikes'] += 1
+				inData[myClass][name]['strikes'] += 1
+				tempJson['strikes'] += 1
 
 				# If this is the third consecutive time an aspect has changed, accept it as valid
 				if inData[myClass][name]['strikes'] > 2:
