@@ -71,7 +71,7 @@ def crawl(loginDict):
 			score = (score and score[0]) or None
 			max = row.xpath('./div[3]/span[2]/text()')
 			max = (max and max[0].strip()[1:]) or None
-			strikes = inData[myClass][name]['strikes'] if (inData.get(myClass).get(name).get('strikes')) else 0
+			strikes = inData[myClass][name]['strikes'] if (inData.get(myClass, {}).get(name, {}).get('strikes')) else 0
 
 			tempJson = {"date":date, "score":score, "max":max, "strikes":strikes}
 
@@ -104,7 +104,6 @@ def crawl(loginDict):
                                 print >> sys.stderr, "Strike counter (consecutive): {}".format(inData[myClass][name]['strikes'])
                                 print >> sys.stderr, "Here is the old JSON: {}".format(inData[myClass][name])
                                 print >> sys.stderr, "Here is the new JSON: {}".format(tempJson)
-                                print >> sys.stderr, "Here is the HTML tree: {}".format(grades.content)
 
 			# Reset strike counter
 			else:
