@@ -100,8 +100,8 @@ def crawl(loginDict):
                                 # Debug for erroneous notifications
                                 print >> sys.stderr, "An aspect of an assignment has changed in some way (this may be erroneous)."
                                 print >> sys.stderr, "Strike counter (consecutive): {}".format(inData[myClass][name]['strikes'])
-                                print >> sys.stderr, "Here is the old JSON: {}".format(inData[myClass][name])
-                                print >> sys.stderr, "Here is the new JSON: {}".format(tempJson)
+                                print >> sys.stderr, "Here is the old JSON for {} in {}: {}".format(myClass, name, inData[myClass][name])
+                                print >> sys.stderr, "Here is the new JSON for {} in {}: {}".format(myClass, name, tempJson)
 
 			# Reset strike counter
 			else:
