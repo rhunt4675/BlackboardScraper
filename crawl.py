@@ -100,8 +100,8 @@ def crawl(loginDict):
                                 # Debug for erroneous notifications
                                 print >> sys.stderr, "An aspect of an assignment has changed in some way (this may be erroneous)."
                                 print >> sys.stderr, "Strike counter (consecutive): {}".format(inData[myClass][name]['strikes'])
-                                print >> sys.stderr, "Here is the old JSON for {} in {}: {}".format(myClass, name, inData[myClass][name])
-                                print >> sys.stderr, "Here is the new JSON for {} in {}: {}".format(myClass, name, tempJson)
+                                print >> sys.stderr, "Here is the old JSON for {} in {}: {}".format(name, classList[myClass], inData[myClass][name])
+                                print >> sys.stderr, "Here is the new JSON for {} in {}: {}".format(name, classList[myClass], tempJson)
 
 			# Reset strike counter
 			else:
@@ -130,10 +130,11 @@ def getClassList(session, iter=0):
 
 def alarm(myClass, assignment, date, score, max, login):
 	# Generate a customized SMS message and duplicate to STDOUT
-	print "Sending Alarm: {} -- {} on {}. You scored {} out of a possible {}.".format(myClass, assignment, date, score, max)
+	alarmTxt = "Sending Alarm: {} -- {} on {}. You scored {} out of a possible {}.".format(myClass, assignment, date, score, max)
+	print alarmTxt
 
 	# Observe 160 char SMS message limit
-	msgs = re.findall("..{,155}", "{} -- {} on {}. You scored {} out of a possible {}.".format(myClass, assignment, date, score, max))
+	msgs = re.findall("..{,155}", alarmTxt)
 	mimemsgs = []
 	for msg in msgs:
 		tempMimeMsg = MIMEText(msg)
