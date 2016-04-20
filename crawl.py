@@ -130,7 +130,7 @@ def getClassList(session, iter=0):
 
 def alarm(myClass, assignment, date, score, max, login):
 	# Generate a customized SMS message and duplicate to STDOUT
-	alarmTxt = "Sending Alarm: {} -- {} on {}. You scored {} out of a possible {}.".format(myClass, assignment, date, score, max)
+	alarmTxt = "{} -- {} on {}. You scored {} out of a possible {}.".format(myClass, assignment, date, score, max)
 	print alarmTxt
 
 	# Observe 160 char SMS message limit
