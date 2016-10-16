@@ -3,6 +3,7 @@ import requests
 import json
 import smtplib
 import getpass
+import base64
 import os
 import sys
 import re
@@ -10,7 +11,7 @@ from email.mime.text import MIMEText
 
 # Default GMAIL credentials
 EUSER = 'minesblackboardcrawler@gmail.com'
-EPASS = 'QmxhY2tiMGFyZA==\n' #Base64
+EPASS = 'Blackb0ard'
 
 def main():
 	# Open persistent profile configuration file
@@ -21,17 +22,17 @@ def main():
 		# Check for grades using provided credentials
 		crawl(loginDict)
 	except ValueError:
-		print >> sys.stderr, "Your .crawl_profile seems to be corrupted."
-		print >> sys.stderr, "Try deleting it and running the program again."
-		print >> sys.stderr
+		print("Your .crawl_profile seems to be corrupted.", file=sys.stderr)
+		print("Try deleting it and running the program again.", file=sys.stderr)
+		print(file=sys.stderr)
 	except IOError:
-	        print >> sys.stderr, "Warning: '.crawl_profile' not found."
-        	print >> sys.stderr, "This looks like the first time you've run this tool."
-	        print >> sys.stderr, "Let's create your persistent profile."
-        	print
+		print("Warning: '.crawl_profile' not found.", file=sys.stderr)
+		print("This looks like the first time you've run this tool.", file=sys.stderr)
+		print("Let's create your persistent profile.", file=sys.stderr)
+		print()
 
 		# Create profile if none exists
-		login = getUserInfo();
+		login = getUserInfo()
 		with open(pwd + '/.crawl_profile', 'w') as profile:
 			json.dump(login, profile)
 
@@ -50,7 +51,7 @@ def crawl(loginDict):
 
 	# Login to Blackboard using loginDict credentials
 	r.get("https://blackboard.mines.edu/")
-	payload = {'user_id':loginDict['bUser'], 'password':loginDict['bPass'].decode('base64'), 'login':'Login', 'action':'login', 'new_loc':''}
+	payload = {'user_id':loginDict['bUser'], 'password':loginDict['bPass'], 'login':'Login', 'action':'login', 'new_loc':''}
 	r.post("https://blackboard.mines.edu/webapps/login/", data=payload)
 
 	# Get a list of student's classes
@@ -97,11 +98,11 @@ def crawl(loginDict):
 					inData[myClass][name]['strikes'] = 0
 					alarm(classList[myClass], name, date, score, max, loginDict)
 
-                                # Debug for erroneous notifications
-                                print >> sys.stderr, "An aspect of an assignment has changed in some way (this may be erroneous)."
-                                print >> sys.stderr, "Strike counter (consecutive): {}".format(inData[myClass][name]['strikes'])
-                                print >> sys.stderr, "Here is the old JSON for {} in {}: {}".format(name, classList[myClass], inData[myClass][name])
-                                print >> sys.stderr, "Here is the new JSON for {} in {}: {}".format(name, classList[myClass], tempJson)
+				# Debug for erroneous notifications
+				print("An aspect of an assignment has changed in some way (this may be erroneous).", file=sys.stderr)
+				print("Strike counter (consecutive): {}".format(inData[myClass][name]['strikes']), file=sys.stderr)
+				print("Here is the old JSON for {} in {}: {}".format(name, classList[myClass], inData[myClass][name]), file=sys.stderr)
+				print("Here is the new JSON for {} in {}: {}".format(name, classList[myClass], tempJson), file=sys.stderr)
 
 			# Reset strike counter
 			else:
@@ -121,7 +122,7 @@ def getClassList(session, iter=0):
 		classList = parsed_json['sv_extras']['sx_filters'][0]['choices']
 	except IndexError:
 		if iter > 9:
-			print >> sys.stderr, "Getting class list failed."	
+			print("Getting class list failed.", file=sys.stderr)
 			return []
 
 		# Retry post request up to 10 times
@@ -131,7 +132,7 @@ def getClassList(session, iter=0):
 def alarm(myClass, assignment, date, score, max, login):
 	# Generate a customized SMS message and duplicate to STDOUT
 	alarmTxt = "{} -- {} on {}. You scored {} out of a possible {}.".format(myClass, assignment, date, score, max)
-	print alarmTxt
+	print(alarmTxt)
 
 	# Observe 160 char SMS message limit
 	msgs = re.findall("..{,155}", alarmTxt)
@@ -141,7 +142,7 @@ def alarm(myClass, assignment, date, score, max, login):
 		tempMimeMsg['To'] = login['To']
 		tempMimeMsg['From'] = login['From']
 		mimemsgs.append(tempMimeMsg)
-		
+
 	# Attempt to login to provided SMTP server with provided credentials and send the message
 	try:
 		smtpclient = smtplib.SMTP(login['Server'], int(login['Port']))
@@ -150,35 +151,35 @@ def alarm(myClass, assignment, date, score, max, login):
 		smtpclient.ehlo()
 
 		# Iterate through list of 160-char messages
-		smtpclient.login(login['eUser'], login['ePass'].decode('base64'))
+		smtpclient.login(login['eUser'], login['ePass'])
 		for msg in mimemsgs:
 			smtpclient.sendmail([msg['From']], [msg['To']], msg.as_string())
 
 		# Close SMTP session
 		smtpclient.quit()
 	except SMTPException:
-		print >> sys.stderr, "SMTP Exception: Either the SMTP server is down or cannot be reached."
-		print >> sys.stderr, "Please try again later."
+		print("SMTP Exception: Either the SMTP server is down or cannot be reached.", file=sys.stderr)
+		print("Please try again later.", file=sys.stderr)
 	return
 
 def getUserInfo():
 	# Prompt user for Blackboard & SMTP credentials as well as a notification address, then help them install a crontab job
 	profile = {}
-	profile['bUser'] = raw_input("Blackboard Username: ")
+	profile['bUser'] = input("Blackboard Username: ")
 
 	while True:
-		profile['bPass'] = getpass.getpass("Blackboard Password: ").encode('base64')
-		if profile['bPass'] == getpass.getpass("Blackboard Password (confirm): ").encode('base64'):
+		profile['bPass'] = getpass.getpass("Blackboard Password: ")
+		if profile['bPass'] == getpass.getpass("Blackboard Password (confirm): "):
 			break
-		print
-		print "Passwords inconsistent. Please try again."
-		print
+		print()
+		print("Passwords inconsistent. Please try again.")
+		print()
 
-	profile['To'] = raw_input("Mobile number: ") + '@'
-	profile['To'] += raw_input("Notification Destination (vtext.com, txt.att.net, tmomail.net): ")
-	profile['From'] = raw_input("Return Address (enter a valid email address): ")
+	profile['To'] = input("Mobile number: ") + '@'
+	profile['To'] += input("Notification Destination (vtext.com, txt.att.net, tmomail.net): ")
+	profile['From'] = input("Return Address (enter a valid email address): ")
 
-	smtpConfigOption = raw_input("SMTP Configuration (Default=1, Custom=2): ")
+	smtpConfigOption = input("SMTP Configuration (Default=1, Custom=2): ")
 	try:
 		smtpConfigOption = int(smtpConfigOption)
 	except ValueError:
@@ -186,15 +187,15 @@ def getUserInfo():
 
 	if smtpConfigOption == 2:
 		while True:
-			profile['Server'] = raw_input("SMTP Server (smtp.comcast.net, [other?]): ")
-			profile['Port'] = raw_input("SMTP Server Port (25, 587): ")
-			profile['eUser'] = raw_input("SMTP Server Username: ")
-			profile['ePass'] = getpass.getpass("SMTP Server Password: ").encode('base64')
+			profile['Server'] = input("SMTP Server (smtp.comcast.net, [other?]): ")
+			profile['Port'] = input("SMTP Server Port (25, 587): ")
+			profile['eUser'] = input("SMTP Server Username: ")
+			profile['ePass'] = getpass.getpass("SMTP Server Password: ")
 			if testSMTP(profile):
 				break;
-			print
-			print "SMTP server login failed. Please try again."
-			print
+			print()
+			print("SMTP server login failed. Please try again.")
+			print()
 
 	else:
 		profile['Server'] = 'smtp.gmail.com'
@@ -203,14 +204,14 @@ def getUserInfo():
 		profile['ePass'] = EPASS
 
 		if not testSMTP(profile):
-			print "SMTP server login failed. crawl.py will not function properly until this is resolved."
+			print("SMTP server login failed. crawl.py will not function properly until this is resolved.")
 
-	print
-	print "Profile verified successfully."
-	print "Install into crontab with: "
-	print
-	print "$ (crontab -l ; echo '0,30 * * * * python {}/crawl.py 1>/dev/null') | sort | uniq | crontab -".format(pwd)
-	print
+	print()
+	print("Profile verified successfully.")
+	print("Install into crontab with: ")
+	print()
+	print("$ (crontab -l ; echo '0,30 * * * * python {}/crawl.py 1>/dev/null') | sort | uniq | crontab -".format(pwd))
+	print()
 
 	return profile
 
@@ -218,9 +219,9 @@ def testSMTP(profile):
 	# Verify that the provided SMTP credentials actually "work" before accepting them
 	try:
 		smtpclient = smtplib.SMTP(profile['Server'], int(profile['Port']))
-                smtpclient.ehlo()
-                smtpclient.starttls()
-                smtpclient.login(profile['eUser'], profile['ePass'].decode('base64'))
+		smtpclient.ehlo()
+		smtpclient.starttls()
+		smtpclient.login(profile['eUser'], profile['ePass'])
 		smtpclient.quit()
 		return True
 	except smtplib.SMTPAuthenticationError:
@@ -229,5 +230,5 @@ def testSMTP(profile):
 
 if __name__ == '__main__':
 	global pwd
-	pwd = os.path.abspath(__file__).rsplit('/', 1)[0] 
+	pwd = os.path.abspath(__file__).rsplit('/', 1)[0]
 	main()
