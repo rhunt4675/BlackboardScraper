@@ -9,10 +9,6 @@ import sys
 import re
 from email.mime.text import MIMEText
 
-# Default GMAIL credentials
-EUSER = 'minesblackboardcrawler@gmail.com'
-EPASS = 'Blackb0ard'
-
 def main():
 	# Open persistent profile configuration file
 	try:
@@ -179,32 +175,16 @@ def getUserInfo():
 	profile['To'] += input("Notification Destination (vtext.com, txt.att.net, tmomail.net): ")
 	profile['From'] = input("Return Address (enter a valid email address): ")
 
-	smtpConfigOption = input("SMTP Configuration (Default=1, Custom=2): ")
-	try:
-		smtpConfigOption = int(smtpConfigOption)
-	except ValueError:
-		smtpConfigOption = 1
-
-	if smtpConfigOption == 2:
-		while True:
-			profile['Server'] = input("SMTP Server (smtp.comcast.net, [other?]): ")
-			profile['Port'] = input("SMTP Server Port (25, 587): ")
-			profile['eUser'] = input("SMTP Server Username: ")
-			profile['ePass'] = getpass.getpass("SMTP Server Password: ")
-			if testSMTP(profile):
-				break;
-			print()
-			print("SMTP server login failed. Please try again.")
-			print()
-
-	else:
-		profile['Server'] = 'smtp.gmail.com'
-		profile['Port'] = '587'
-		profile['eUser'] = EUSER
-		profile['ePass'] = EPASS
-
-		if not testSMTP(profile):
-			print("SMTP server login failed. crawl.py will not function properly until this is resolved.")
+	while True:
+		profile['Server'] = input("SMTP Server (smtp.comcast.net, [other?]): ")
+		profile['Port'] = input("SMTP Server Port (25, 587): ")
+		profile['eUser'] = input("SMTP Server Username: ")
+		profile['ePass'] = getpass.getpass("SMTP Server Password: ")
+		if testSMTP(profile):
+			break;
+		print()
+		print("SMTP server login failed. Please try again.")
+		print()
 
 	print()
 	print("Profile verified successfully.")
