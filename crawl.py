@@ -88,8 +88,8 @@ def crawl(loginDict):
 				inData[myClass][name]['strikes'] += 1
 				tempJson['strikes'] += 1
 
-				# If this is the third consecutive time an aspect has changed, accept it as valid
-				if inData[myClass][name]['strikes'] > 2:
+				# If this is the nth consecutive time an aspect has changed, accept it as valid
+				if inData[myClass][name]['strikes'] > 20:
 					inData[myClass][name] = tempJson
 					inData[myClass][name]['strikes'] = 0
 					alarm(classList[myClass], name, date, score, max, loginDict)
